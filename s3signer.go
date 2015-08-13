@@ -17,7 +17,7 @@ type S3Client struct {
     buckets []s3.Bucket
 }
 
-func S3init(region aws.Region) (S3Client) {
+func s3init(region aws.Region) (S3Client) {
     auth, err := aws.EnvAuth()
     if err != nil {
       log.Fatal(err)
@@ -34,7 +34,7 @@ func S3init(region aws.Region) (S3Client) {
     }
 }
 
-func (s3 *S3Client) BucketFileHandler(w http.ResponseWriter, req *http.Request) {
+func (s3 *S3Client) bucketFileHandler(w http.ResponseWriter, req *http.Request) {
     vars := mux.Vars(req)
     bucket := vars["bucket"]
     filename := vars["filename"]
@@ -61,34 +61,34 @@ func (s3 *S3Client) BucketFileHandler(w http.ResponseWriter, req *http.Request) 
     }
 }
 
-func GetRegion() (region aws.Region, err error) {
-    req_region := os.Getenv("AWS_REGION")
-    if req_region == "" {
+func getRegion() (region aws.Region, err error) {
+    reqRegion := os.Getenv("AWS_REGION")
+    if reqRegion == "" {
         err = errors.New("missing AWS_REGION environment variable")
         return
     }
 
-    for name, aws_region := range aws.Regions {
-        if req_region == name {
-            region = aws_region
+    for name, awsRegion := range aws.Regions {
+        if reqRegion == name {
+            region = awsRegion
             return
         }
     }
 
-    err = errors.New("invalid region: " + req_region)
+    err = errors.New("invalid region: " + reqRegion)
     return
 }
 
 func main() {
-    region, err := GetRegion()
+    region, err := getRegion()
     if err != nil {
         log.Fatal(err)
     }
 
-    s3 := S3init(region)
+    s3 := s3init(region)
 
     r := mux.NewRouter()
-    r.HandleFunc("/{bucket}/{filename}/", s3.BucketFileHandler)
+    r.HandleFunc("/{bucket}/{filename}/", s3.bucketFileHandler)
     http.Handle("/", r)
 
     httperr := http.ListenAndServe(":8080", nil)
