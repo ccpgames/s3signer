@@ -49,8 +49,8 @@ func (s3 *S3Client) bucketFileHandler(w http.ResponseWriter, req *http.Request) 
 
 			for _, key := range *keys {
 				if filename == key.Key {
-					expires := time.Now()
-					expires.Add(time.Duration(5))
+					expires := time.Now().UTC()
+					expires = expires.Add(time.Duration(5) * time.Second)
 					url := s3.buckets[i].SignedURL(filename, expires)
 					io.WriteString(w, url)
 					return
